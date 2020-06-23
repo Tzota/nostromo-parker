@@ -8,26 +8,29 @@ import (
 
 const sensorDelimiter = "\r\n"
 
-// Parser is a buffered storage for data from sensor
-type Parser struct {
+// Harvester is a buffered storage for data from sensor
+type Harvester struct {
 	bag      []byte
 	Messages chan Message
 }
 
 // New is .ctor
-func New() Parser {
-	return Parser{
-		bag:      make([]byte, 20),
+func New() Harvester {
+	return Harvester{
+		bag:      make([]byte, 0),
 		Messages: make(chan Message),
 	}
 }
 
 // ListenTo attaches to byte channel with serial data
-func (p Parser) ListenTo(dp chan []byte) {
+func (p Harvester) ListenTo(dp chan []byte) {
 	for {
+		log.Info("gonna receive chunk")
 		chunk := <-dp
-		err := p.Eat(chunk)
+		log.Info("chunk received")
+		err := p.eat(chunk)
 		if err != nil {
+			log.Error(err)
 			// TODO once is OK (connected in the middle of the packed), twice is problem
 			// count errors in Parser struct private field
 			// successful read should reset error counter
@@ -36,13 +39,13 @@ func (p Parser) ListenTo(dp chan []byte) {
 	}
 }
 
-// Eat appends chunk of data to storage and maybe send a message to channel
-func (p Parser) Eat(chunk []byte) error {
+// eat appends chunk of data to storage and maybe send a message to channel
+func (p Harvester) eat(chunk []byte) error {
 	p.bag = append(p.bag, chunk...)
 	str := string(p.bag)
 
 	if pos := strings.Index(str, sensorDelimiter); pos > -1 {
-		to := (pos + len(sensorDelimiter) + 1)
+		to := (pos + len(sensorDelimiter))
 		part := str[0:to]
 		message, err := parseString(part)
 		p.bag = p.bag[to:]

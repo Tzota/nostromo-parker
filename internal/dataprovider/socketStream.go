@@ -15,7 +15,7 @@ func GetChunker(ur UnixReader, fd int) chan []byte {
 			n, _ := ur.Read(fd, buffer)
 
 			if n > 0 {
-				c <- buffer[:]
+				c <- buffer[:n]
 			}
 		}
 	}()

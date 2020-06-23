@@ -1,6 +1,7 @@
 package dataprovider
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -14,11 +15,10 @@ func (r SimpleUnixReader) Read(fd int, p []byte) (n int, err error) {
 }
 
 func TestPositive(t *testing.T) {
-	t.Skip()
 	c := GetChunker(SimpleUnixReader{"passed!"}, 1)
 	data := <-c
 
-	if string(data) != "passed!" {
-		t.Error("no data came back")
+	if strings.Compare(string(data), "passed!") != 0 {
+		t.Errorf("wrong data came back (%s, %d, %d)", string(data), strings.Compare(string(data), "passed!"), len(data))
 	}
 }

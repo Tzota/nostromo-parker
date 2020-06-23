@@ -12,6 +12,12 @@ import (
 )
 
 func main() {
+	// handle := serialdevice.Connect(mac)
+	// defer := handle.Close();
+	// dp := dataprovider.GetChunker(dataprovider.RealUnixReader{}, handle)
+	// harvester := ds18b20.New()
+	// go harvester.ListenTo(dp)
+
 	mac, err := convert.Str2ba("00:19:10:08:FE:08")
 	if err != nil {
 		log.Fatal(err)
@@ -28,13 +34,13 @@ func main() {
 	log.Println("done")
 
 	dp := dataprovider.GetChunker(dataprovider.RealUnixReader{}, fd)
-	parser := ds18b20.New()
+	harvester := ds18b20.New()
 
-	go parser.ListenTo(dp)
+	go harvester.ListenTo(dp)
 
 	go func() {
 		for {
-			message := <-parser.Messages
+			message := <-harvester.Messages
 
 			sendToTerminal(message)
 		}
