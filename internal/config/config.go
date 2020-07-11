@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/tzota/nostromo-parker/internal/sensors"
+	"github.com/tzota/nostromo-parker/internal/kind"
 )
 
 // Point represent a sensor in config file
 type Point struct {
-	Mac  string       `json:"mac"`
-	Kind sensors.Kind `json:"kind"`
+	Mac  string    `json:"mac"`
+	Kind kind.Kind `json:"kind"`
+	Skip bool      `json:"skip"`
 }
 
 // Config is a general entry point

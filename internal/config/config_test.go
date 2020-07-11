@@ -47,7 +47,7 @@ func TestJsonTags(t *testing.T) {
 		return false
 	}
 
-	point := Point{Mac: "00:01:02:03:04:05", Kind: "foo"}
+	point := Point{Mac: "00:01:02:03:04:05", Kind: "foo", Skip: true}
 	if !exists(point) {
 		t.Error("seems like som json tags are broken")
 	}
