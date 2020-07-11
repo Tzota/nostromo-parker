@@ -8,7 +8,8 @@ func TestPositiveListenTo(t *testing.T) {
 	h := New()
 	go h.ListenTo(dp)
 	dp <- []byte("Temp C: 11.22\r\n")
-	m := <-h.Messages
+	im := <-h.Messages
+	m := im.(Message)
 	if m.Temperature != 11.22 {
 		t.Errorf("have %f instead of 11.22", m.Temperature)
 	}

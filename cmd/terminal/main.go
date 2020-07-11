@@ -1,62 +1,69 @@
 package main
 
 import (
-	"syscall"
+	"os"
+	"os/signal"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/sys/unix"
 
+	"github.com/tzota/nostromo-parker/internal/config"
 	"github.com/tzota/nostromo-parker/internal/dataprovider"
-	"github.com/tzota/nostromo-parker/internal/sensors/ds18b20"
-	"github.com/tzota/nostromo-parker/internal/utils/convert"
+	"github.com/tzota/nostromo-parker/internal/serialdevice"
 )
 
-func main() {
-	// handle := serialdevice.Connect(mac)
-	// defer := handle.Close();
-	// dp := dataprovider.GetChunker(dataprovider.RealUnixReader{}, handle)
-	// harvester := ds18b20.New()
-	// go harvester.ListenTo(dp)
+func init() {
+	// log.SetReportCaller(true)
+}
 
-	mac, err := convert.Str2ba("00:19:10:08:FE:08")
+func main() {
+	cfg, err := config.ReadFromFile("./config.json")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
-	fd, err := unix.Socket(syscall.AF_BLUETOOTH, syscall.SOCK_STREAM, unix.BTPROTO_RFCOMM)
-	check(err)
-	addr := &unix.SockaddrRFCOMM{Addr: mac, Channel: 1}
-
-	log.Print("connecting...")
-	err = unix.Connect(fd, addr)
-	check(err)
-	defer unix.Close(fd)
-	log.Println("done")
-
-	dp := dataprovider.GetChunker(dataprovider.RealUnixReader{}, fd)
-	harvester := ds18b20.New()
-
-	go harvester.ListenTo(dp)
-
-	go func() {
-		for {
-			message := <-harvester.Messages
-
-			sendToTerminal(message)
+	for _, point := range cfg.Points {
+		if point.Skip {
+			continue
 		}
-	}()
+		if err = subscribe(point); err != nil {
+			log.WithFields(log.Fields{
+				"mac": point.Mac, "kind": point.Kind,
+			}).Errorf("Can't connect to point")
+		}
+	}
 
 	select {}
 }
 
-func check(err error) {
+func subscribe(p config.Point) error {
+	conn, err := serialdevice.Connect(p.Mac, &serialdevice.UnixSocket{})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	subscribeShutdown(func() { conn.Close() })
+
+	dp := dataprovider.GetChunker(&conn)
+
+	h := p.Kind.New()
+
+	go h.ListenTo(dp)
+
+	go func() {
+		for {
+			message := <-h.GetMessagesChannel()
+			message.ReportToLog()
+		}
+	}()
+
+	return nil
 }
 
-func sendToTerminal(m ds18b20.Message) {
-	log.WithFields(log.Fields{
-		"message": m.Temperature,
-	}).Info("Received")
+func subscribeShutdown(onClose func()) {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, os.Kill)
+	go func(signals <-chan os.Signal) {
+		<-signals
+		onClose()
+		os.Exit(0)
+	}(ch)
 }
