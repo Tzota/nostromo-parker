@@ -1,18 +1,23 @@
 package dataprovider
 
-// UnixReader decouples source of data for testing...
-type UnixReader interface {
-	Read(fd int, p []byte) (n int, err error)
-}
+import (
+	"io"
+
+	log "github.com/sirupsen/logrus"
+)
 
 // GetChunker reads complete chunk of data from socket
-func GetChunker(ur UnixReader, fd int) chan []byte {
+func GetChunker(conn io.Reader) chan []byte {
 	c := make(chan []byte)
 
 	go func() {
 		for {
 			buffer := make([]byte, 50)
-			n, _ := ur.Read(fd, buffer)
+			n, err := conn.Read(buffer)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
 
 			if n > 0 {
 				c <- buffer[:n]

@@ -9,13 +9,14 @@ type SimpleUnixReader struct {
 	answer string
 }
 
-func (r SimpleUnixReader) Read(fd int, p []byte) (n int, err error) {
+func (r SimpleUnixReader) Read(p []byte) (n int, err error) {
 	copy(p, r.answer)
 	return len(r.answer), nil
 }
 
 func TestPositive(t *testing.T) {
-	c := GetChunker(SimpleUnixReader{"passed!"}, 1)
+	conn := SimpleUnixReader{"passed!"}
+	c := GetChunker(conn)
 	data := <-c
 
 	if strings.Compare(string(data), "passed!") != 0 {
