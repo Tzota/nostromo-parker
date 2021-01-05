@@ -6,7 +6,7 @@ type IHarvester interface {
 	GetMessagesChannel() chan IMessage
 }
 
-// IMessage is a data message from sensor
+// IMessage is a data message from sensor, visitor pattern
 type IMessage interface {
 	ReportToLog()
 }

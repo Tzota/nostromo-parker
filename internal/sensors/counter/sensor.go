@@ -55,9 +55,9 @@ func (p Sensor) eat(chunk []byte) error {
 // ListenTo attaches to byte channel with serial data
 func (p Sensor) ListenTo(dp chan []byte) {
 	for {
-		log.Info("gonna receive chunk")
+		log.Trace("Receiving chunk")
 		chunk := <-dp
-		log.Info("chunk received")
+		log.WithField("len", len(chunk)).Trace("Received chunk")
 		err := p.eat(chunk)
 		if err != nil {
 			log.Error(err)

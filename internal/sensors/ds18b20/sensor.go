@@ -55,13 +55,13 @@ func (p Sensor) eat(chunk []byte) error {
 // ListenTo attaches to byte channel with serial data
 func (p Sensor) ListenTo(dp chan []byte) {
 	for {
-		log.Info("gonna receive chunk")
+		log.Trace("Receiving chunk")
 		chunk := <-dp
-		log.Info("chunk received")
+		log.WithField("len", len(chunk)).Trace("Received chunk")
 		err := p.eat(chunk)
 		if err != nil {
 			log.Error(err)
-			// TODO once is OK (connected in the middle of the packed), twice is problem
+			// TODO once is OK (connected in the middle of the pack), twice is problem
 			// count errors in Parser struct private field
 			// successful read should reset error counter
 			continue

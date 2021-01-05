@@ -9,7 +9,7 @@ import (
 var findRe *regexp.Regexp
 
 func init() {
-	findRe = regexp.MustCompile(`Temp C:\s*([\d\.]*)\s*`)
+	findRe = regexp.MustCompile(`Temp C:\s*([\-\d\.]*)\s*`)
 }
 
 // ParseBytes tries to find a temperature info in serial data

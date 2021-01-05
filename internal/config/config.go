@@ -19,6 +19,23 @@ type Config struct {
 	Points []Point `json:"points"`
 }
 
+// NonSkipped returns only active sensors from the cfg
+func (cfg Config) NonSkipped() <-chan Point {
+	c := make(chan Point)
+
+	go func() {
+		for _, p := range cfg.Points {
+			if p.Skip {
+				continue
+			}
+			c <- p
+		}
+		close(c)
+	}()
+
+	return c
+}
+
 // ReadFromFile your config
 func ReadFromFile(filename string) (Config, error) {
 	data, err := ioutil.ReadFile(filename)
