@@ -3,7 +3,8 @@ MAKEFLAGS += --silent
 
 clean:
 	go clean
-	rm ./cmd/terminal ./cover.out
+	rm ./cover.out
+
 .PHONY: clean
 
 help:
@@ -23,3 +24,13 @@ coverage_raw:
 	go test ./... -coverprofile cover.out
 	grep -v -e ' 1$$' cover.out
 .PHONY: coverage_raw
+
+release_terminal:
+	cd scripts
+	./release_terminal.sh
+.PHONY: release_terminal
+
+deploy_terminal_scp:
+	cd build/package/scp
+	./index.sh pi@192.168.1.104:~/Programs/nostromo-parker/
+.PHONY: deploy_scp
