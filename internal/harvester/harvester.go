@@ -8,5 +8,8 @@ type IHarvester interface {
 
 // IMessage is a data message from sensor, visitor pattern
 type IMessage interface {
+	// ReportToLog sends message to standard log system
 	ReportToLog()
+	// ToString returns string representations
+	ToString() string
 }
