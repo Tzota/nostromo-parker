@@ -13,24 +13,24 @@ func init() {
 }
 
 // ParseBytes tries to find a temperature info in serial data
-func parseBytes(bytes []byte) (Message, error) {
+func parseBytes(bytes []byte) (ds18b20Payload, error) {
 	message := string(bytes)
 
 	return parseString(message)
 }
 
 // ParseString tries to find a temperature info in serial data
-func parseString(message string) (Message, error) {
+func parseString(message string) (ds18b20Payload, error) {
 	matches := findRe.FindStringSubmatch(message)
 
 	if len(matches) < 2 {
-		return Message{}, fmt.Errorf("no data (partial read?) `%s`", message)
+		return ds18b20Payload{}, fmt.Errorf("no data (partial read?) `%s`", message)
 	}
 
 	temperature, err := strconv.ParseFloat(matches[1], 32)
 	if err != nil {
-		return Message{}, fmt.Errorf("can't find a temperature in the message")
+		return ds18b20Payload{}, fmt.Errorf("can't find a temperature in the message")
 	}
 
-	return Message{float32(temperature)}, nil
+	return ds18b20Payload{float32(temperature)}, nil
 }

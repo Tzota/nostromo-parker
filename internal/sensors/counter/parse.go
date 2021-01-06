@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-func parseString(message string) (Message, error) {
+func parseString(message string) (counterPayload, error) {
 	m := strings.TrimSpace(message) // don't wanna regex
 	val, err := strconv.Atoi(m)
 	if err != nil {
-		return Message{}, fmt.Errorf("can't find integer in a message '%s'", message)
+		return counterPayload{}, fmt.Errorf("can't find integer in a message '%s'", message)
 	}
-	return Message{Counter: val}, nil
+	return counterPayload{Counter: val}, nil
 }
