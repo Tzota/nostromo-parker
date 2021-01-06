@@ -15,7 +15,7 @@ func GetChunker(conn io.Reader) chan []byte {
 			buffer := make([]byte, 50)
 			n, err := conn.Read(buffer)
 			if err != nil {
-				log.Error(err)
+				log.WithField("error", err).Error("Read from connection")
 				continue
 			}
 

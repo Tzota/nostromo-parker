@@ -49,25 +49,25 @@ func Connect(macAddress string, u unixSocket) (Connection, error) {
 	// log.SetReportCaller(true)
 	mac, err := convert.Str2ba(macAddress)
 	if err != nil {
-		log.Error(err)
+		log.WithField("error", err).Error("Convert mac address")
 		return conn, ErrorBadMacAddress
 	}
 
 	fd, err := u.Socket()
 	if err != nil {
-		log.Error(err)
+		log.WithField("error", err).Error("Get socket")
 		return conn, ErrorNoSocket
 	}
 
 	addr := &unix.SockaddrRFCOMM{Addr: mac, Channel: 1}
 
-	log.Infof("connecting to %s", macAddress)
+	log.WithField("mac", macAddress).Info("Connecting")
 	err = u.Connect(fd, addr)
 	if err != nil {
 		log.Error(err)
 		return conn, ErrorNoConnection
 	}
-	log.Infof("connected to %s", macAddress)
+	log.WithField("mac", macAddress).Info("Connected")
 	conn.fd = fd
 
 	return conn, nil
@@ -75,18 +75,18 @@ func Connect(macAddress string, u unixSocket) (Connection, error) {
 
 // Close closes connection to mac address
 func (conn *Connection) Close() error {
-	log.WithField("mac", conn.macAddress).Info("closing connection")
+	log.WithField("mac", conn.macAddress).Info("Closing connection")
 	if conn.closed {
-		log.WithField("mac", conn.macAddress).Info("connection already closed")
+		log.WithField("mac", conn.macAddress).Info("Connection already closed")
 		return nil
 	}
 
 	err := conn.closer.Close(conn.fd)
 	if err == nil {
 		conn.closed = true
-		log.WithField("mac", conn.macAddress).Info("closed connection")
+		log.WithField("mac", conn.macAddress).Info("Closed connection")
 	} else {
-		log.WithField("mac", conn.macAddress).Info("can't close connection")
+		log.WithField("mac", conn.macAddress).Info("Can't close connection")
 	}
 
 	return err
