@@ -19,6 +19,9 @@ type IMessageAction = func(harvester.IMessage)
 // Simple connects to all the sensors with soe callback
 func Simple(cfg config.Config, lambda IMessageAction) {
 	var wg sync.WaitGroup
+
+	initOnShutdown(len(cfg.Points))
+
 	for _, point := range cfg.Points {
 		if point.Skip {
 			continue
@@ -39,7 +42,7 @@ func subscribe(p config.Point, lambda IMessageAction) error {
 	if err != nil {
 		return err
 	}
-	onShutdown(func() { conn.Close() })
+	enqueueOnClose(func() { conn.Close() })
 
 	dp := dataprovider.GetChunker(&conn)
 
@@ -57,12 +60,33 @@ func subscribe(p config.Point, lambda IMessageAction) error {
 	return nil
 }
 
-func onShutdown(onClose func()) {
+// #region extract to separate structure?
+
+var onCloses []func()
+
+func initOnShutdown(length int) {
+	onCloses = make([]func(), 0, length)
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
 	go func(signals <-chan os.Signal) {
 		<-signals
-		onClose()
+		var wg sync.WaitGroup
+		for i, onClose := range onCloses {
+			wg.Add(1)
+			log.Info(i)
+
+			go func(delegate func()) {
+				delegate()
+				wg.Done()
+			}(onClose)
+		}
+		wg.Wait()
 		os.Exit(0)
 	}(ch)
 }
+
+func enqueueOnClose(f func()) {
+	onCloses = append(onCloses, f)
+}
+
+// #endregion
