@@ -1,0 +1,14 @@
+{
+    "points": [
+        {
+            "mac": "00:19:10:08:FE:08",
+            "kind": "ds18b20",
+            "skip": false
+        },
+        {
+            "mac": "00:19:10:08:F8:81",
+            "kind": "counter",
+            "skip": false
+        }
+    ]
+}

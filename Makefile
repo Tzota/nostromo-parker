@@ -32,5 +32,15 @@ release_terminal:
 
 deploy_terminal_scp:
 	cd build/package/scp
-	./index.sh pi@192.168.1.104:~/Programs/nostromo-parker/
+	./terminal.sh pi@192.168.1.104:~/Programs/nostromo-parker-terminal/
+.PHONY: deploy_scp
+
+release_redis_stream:
+	cd scripts
+	./release_redis_stream.sh
+.PHONY: release_redis_stream
+
+deploy_redis_stream_scp:
+	cd build/package/scp
+	./redis_stream.sh pi@192.168.1.104:~/Programs/nostromo-parker-redis-stream/
 .PHONY: deploy_scp
