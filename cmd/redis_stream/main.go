@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -14,8 +16,14 @@ import (
 var ctx = context.Background()
 
 func main() {
+	redisServer := os.Getenv("REDIS_SERVER")
+	if redisServer == "" {
+		panic(errors.New("Need REDIS_SERVER ip"))
+	}
+	log.WithField("addr", redisServer+":6379").Info("Redis")
+
 	client := redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
+		Addr:     redisServer + ":6379",
 		Password: "",
 		DB:       0,
 	})
