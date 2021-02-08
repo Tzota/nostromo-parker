@@ -4,6 +4,7 @@ MAKEFLAGS += --silent
 clean:
 	go clean
 	rm ./cover.out
+	rm -rf ./cmd/*/out
 
 .PHONY: clean
 
@@ -27,7 +28,7 @@ coverage_raw:
 
 release_terminal:
 	cd scripts
-	./release_terminal.sh
+	./arm/release_terminal.sh
 .PHONY: release_terminal
 
 deploy_terminal_scp:
@@ -37,7 +38,7 @@ deploy_terminal_scp:
 
 release_redis_stream:
 	cd scripts
-	./release_redis_stream.sh
+	./arm/release_redis_stream.sh
 .PHONY: release_redis_stream
 
 deploy_redis_stream_scp:
