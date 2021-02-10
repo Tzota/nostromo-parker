@@ -14,8 +14,13 @@ mkdir app
 
 cp -r ../../../../../cmd/redis_stream/out/linux/$ARCH/* ./app
 cp -r ../../../../../cmd/redis_stream/config.json ./app
+SEMVER="0.0.1"
+docker build -t nostromo-parker-redis-stream-$ARCH:$SEMVER .
 
-docker build -t nostromo-parker-redis-stream-$ARCH:0.0.1 .
+docker image tag nostromo-parker-redis-stream-$ARCH:$SEMVER tzota/nostromo-parker-redis-stream-$ARCH:$SEMVER
+docker image tag nostromo-parker-redis-stream-$ARCH:$SEMVER tzota/nostromo-parker-redis-stream-$ARCH:latest
+
+docker push --all-tags tzota/nostromo-parker-redis-stream-$ARCH
 
 rm -rf ./app
 
