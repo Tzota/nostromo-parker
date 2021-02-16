@@ -5,7 +5,6 @@ clean:
 	go clean
 	rm ./cover.out
 	rm -rf ./cmd/*/out
-
 .PHONY: clean
 
 help:

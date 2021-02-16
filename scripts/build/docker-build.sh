@@ -2,7 +2,6 @@
 set -euo pipefail
 
 source ./_common/get_arch.sh || exit 1
-pwd
 pushd ../../build/package/docker/$ARCH/redis-stream
 
 if [ -d "./app" ]
