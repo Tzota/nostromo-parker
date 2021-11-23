@@ -7,8 +7,9 @@ import (
 )
 
 // GetChunker reads complete chunk of data from socket
-func GetChunker(conn io.Reader) chan []byte {
+func GetChunker(conn io.Reader) (chan []byte, chan bool) {
 	c := make(chan []byte)
+	flag := make(chan bool)
 
 	go func() {
 		for {
@@ -16,7 +17,14 @@ func GetChunker(conn io.Reader) chan []byte {
 			n, err := conn.Read(buffer)
 			if err != nil {
 				log.WithField("error", err).Error("Read from connection")
-				continue
+				close(c)
+				defer (func() {
+					flag <- true
+					close(flag)
+				})()
+
+				// continue
+				return
 			}
 
 			if n > 0 {
@@ -25,5 +33,5 @@ func GetChunker(conn io.Reader) chan []byte {
 		}
 	}()
 
-	return c
+	return c, flag
 }

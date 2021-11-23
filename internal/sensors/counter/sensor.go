@@ -65,7 +65,12 @@ func (s Sensor) eat(chunk []byte) error {
 func (s Sensor) ListenTo(dp chan []byte) {
 	for {
 		log.Trace("Receiving chunk")
-		chunk := <-dp
+		chunk, ok := <-dp
+		if !ok {
+			log.Trace("Channel is closed")
+			return // канал закрылся из-за разрыва связи
+		}
+
 		log.WithField("len", len(chunk)).Trace("Received chunk")
 		err := s.eat(chunk)
 		if err != nil {

@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/tzota/nostromo-parker/internal/dataprovider"
 	"github.com/tzota/nostromo-parker/internal/harvester"
 	"github.com/tzota/nostromo-parker/internal/serialdevice"
+	"github.com/tzota/nostromo-parker/internal/utils/mymath"
 )
 
 // IMessageAction is a simple callback
@@ -24,27 +26,50 @@ func Simple(cfg config.Config, lambda IMessageAction) {
 
 	for _, point := range cfg.Points {
 		if point.Skip {
+			log.WithField("mac", point.Mac).Info("Skipping point")
 			continue
 		}
+
+		firstRun := true
+		timeOuts := make(map[string]int64)
+
 		wg.Add(1)
 		go func(p config.Point) {
-			if err := subscribe(p, lambda); err != nil {
-				log.WithFields(log.Fields{"mac": p.Mac, "kind": p.Kind}).Errorf("Can't connect to point")
-			}
-			wg.Done()
+			timeOuts[p.Mac] = 1
+			go (func() {
+				for {
+					err, flag := subscribe(p, lambda)
+					if firstRun {
+						firstRun = false
+						wg.Done()
+					}
+					if err != nil {
+						timeout := mymath.Int64min(128, timeOuts[p.Mac]*2)
+						timeOuts[p.Mac] = timeout
+						log.WithFields(log.Fields{"mac": p.Mac, "kind": p.Kind, "timeout": timeout}).Errorf("Can't connect to point")
+						time.Sleep(time.Second * time.Duration(timeout))
+					} else {
+						timeOuts[p.Mac] = 1
+					}
+					if flag != nil {
+						<-flag
+						log.WithFields(log.Fields{"mac": p.Mac, "kind": p.Kind}).Errorf("Lost connection to point")
+					}
+				}
+			})()
 		}(point)
 	}
 	wg.Wait()
 }
 
-func subscribe(p config.Point, lambda IMessageAction) error {
+func subscribe(p config.Point, lambda IMessageAction) (error, chan bool) {
 	conn, err := serialdevice.Connect(p.Mac, &serialdevice.UnixSocket{})
 	if err != nil {
-		return err
+		return err, nil
 	}
 	enqueueOnClose(func() { conn.Close() })
 
-	dp := dataprovider.GetChunker(&conn)
+	dp, flag := dataprovider.GetChunker(&conn)
 
 	h := p.Kind.New()
 
@@ -57,7 +82,7 @@ func subscribe(p config.Point, lambda IMessageAction) error {
 		}
 	}()
 
-	return nil
+	return nil, flag
 }
 
 // #region extract to separate structure?
